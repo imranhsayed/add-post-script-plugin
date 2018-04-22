@@ -34,13 +34,15 @@ if ( ! function_exists( 'ihs_display_custom_script_meta_boxes' ) ) {
 	/* Prints the box content */
 	function ihs_display_custom_script_meta_boxes( $post ) {
 
-		// Use nonce for verification
+		/**
+		 * Use nonce for verification.
+		 * This will create a hidden input field with id and name as 'ihs_add_script_nonce_name' and unique nonce input value.
+		 */
 		wp_nonce_field( plugin_basename( __FILE__ ), 'ihs_add_script_nonce_name' );
 
-		// The actual fields for data entry
-		// Use get_post_meta to retrieve an existing value from the database and use the value for the form
-		$value        = get_post_meta( $post->ID, 'ihs_add_script_header_meta', true );
-		$value_footer = get_post_meta( $post->ID, 'ihs_add_script_footer_meta', true );
+		// The function get_post_meta retrieves an existing value from the database and use the value for the form.
+		$header_meta_value = get_post_meta( $post->ID, 'ihs_add_script_header_meta', true );
+		$footer_meta_value = get_post_meta( $post->ID, 'ihs_add_script_footer_meta', true );
 		?>
 		<div class="postbox">
 			<div class="inside">
@@ -51,7 +53,7 @@ if ( ! function_exists( 'ihs_display_custom_script_meta_boxes' ) ) {
 								<label for="ihs-add-script-header">
 									<?php _e( "add script / style to be added to the header of the page", 'add-post-script-plugin' ); ?>
 								</label>
-								<label for=""><textarea id="ihs-add-script-header" class="ihs-add-script-header" name="ihs-add-script-header" size="25"><?php echo $value ?></textarea></label>
+								<label for=""><textarea id="ihs-add-script-header" class="ihs-add-script-header" name="ihs-add-script-header" size="25"><?php echo $header_meta_value ?></textarea></label>
 							</p>
 						</td>
 					</tr>
@@ -62,11 +64,11 @@ if ( ! function_exists( 'ihs_display_custom_script_meta_boxes' ) ) {
 									<?php _e( "add script to be added to the footer of the page before the </body> ( Only put javascript codes here )", 'ihs-add-script-footer' ); ?>
 								</label>
 								<label for="">
-									<textarea id="ihs-add-script-footer" class="ihs-add-script-footer" name="ihs-add-script-footer" size="25"><?php echo $value_footer ?></textarea>
+									<textarea id="ihs-add-script-footer" class="ihs-add-script-footer" name="ihs-add-script-footer" size="25"><?php echo $footer_meta_value ?></textarea>
 								</label>
 							</p>
-							<p><?php _e( "You should put the code with the script tags<code> &lt;script type='text/javascript'&gt; the code &lt;/script&gt;</code>", 'add-post-script-plugin' ); ?></p>
-							<p><?php _e( "You should put the code with the script tags<code> &lt;style&gt; the code &lt;/script&gt;</code>", 'add-post-script-plugin' ); ?></p>
+							<p><?php _e( "You should put the style code with the script tags<code> &lt;style&gt; the code &lt;/style&gt;</code>", 'add-post-script-plugin' ); ?></p>
+							<p><?php _e( "You should put the script code with the script tags<code> &lt;script type='text/javascript'&gt; the code &lt;/script&gt;</code>", 'add-post-script-plugin' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -84,8 +86,11 @@ if ( ! function_exists( 'ihs_script_save_custom_box' ) ) {
 	 * @param $post_id
 	 */
 	function ihs_script_save_custom_box( $post_id ) {
+		/**
+		 * When the post save saved or updated we get $_POST available.
+		 * Check if the current user is authorised to do this action.
+		 */
 
-		// First we need to check if the current user is authorised to do this action.
 		if ( isset( $_POST['post_type'] ) && 'page' == $_POST['post_type'] ) {
 			if ( ! current_user_can( 'edit_page', $post_id ) ) {
 				return;
@@ -96,20 +101,16 @@ if ( ! function_exists( 'ihs_script_save_custom_box' ) ) {
 			}
 		}
 
-		// Secondly we need to check if the user intended to change this value.
+		// Check if the nonce valued we received is the same we created in 'ihs_display_custom_script_meta_boxes' function.
 		if ( ! isset( $_POST['ihs_add_script_nonce_name'] ) || ! wp_verify_nonce( $_POST['ihs_add_script_nonce_name'], plugin_basename( __FILE__ ) ) ) {
 			return;
 		}
 
-		// Thirdly we can save the value to the database
-
-		//if saving in a custom table, get post_ID
 		$post_ID = isset( $_POST['post_ID'] ) ? $_POST['post_ID'] : - 1;
-		//sanitize user input
 		$header_script = isset( $_POST['ihs-add-script-header'] ) ? $_POST['ihs-add-script-header'] : '';
-
 		$footer_script = isset( $_POST['ihs-add-script-footer'] ) ? $_POST['ihs-add-script-footer'] : '';
 
+		// Save/Update the meta data ( style/scripts ) entered by user into to the post_meta table.
 		update_post_meta( $post_ID, 'ihs_add_script_header_meta', $header_script );
 		update_post_meta( $post_ID, 'ihs_add_script_footer_meta', $footer_script );
 
