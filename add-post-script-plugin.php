@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Add Post Script Plugin
-Description: A plugin to insert style/scripts in individual post or page codes
+Description: A WordPress Plugin to insert style/scripts in individual post or pages via admin dashboard post/page editor
 Plugin URI:   https://github.com/imranhsayed/add-post-script-plugin
 Author: Imran Sayed
 Author URI:   https://profiles.wordpress.org/gsayed786
